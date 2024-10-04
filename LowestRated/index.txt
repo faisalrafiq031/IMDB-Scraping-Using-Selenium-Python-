@@ -1,0 +1,108 @@
+# REST FILES CODE OF ALL FOLDERS ARE EXPLAIN IN explain.txt BECASUE ALL FILES DATA ARE ALMOST SAME SO.
+
+
+# THIS IS THE EXPLAINATION OF Sorting.py FILE AND Viualize k liye File Top250Movies Folder me h
+
+
+# IMPORTANT LIBRARIES
+
+import pyodbc        # To get data from sql server 
+import os            # Importing os to handle file paths
+import sys           # This is used to exit the program
+
+
+# FILE PATH AND TABLE NAME
+
+file_paths = {
+    1: {"path": r"C:\Users\Faisal\Desktop\IMDB\IMDB SCRAPING\LowestRated\byAlphabetic.py", "table": "IMDB_Top_lowRate_byalphabetic"},
+    .
+    .
+    7: {"path": r"C:\Users\Faisal\Desktop\IMDB\IMDB SCRAPING\LowestRated\lowestRated.py", "table": "IMDB_Top_lowRate"}
+}
+
+Purpose: Yeh dictionary file paths aur unke SQL table names store karti hai.
+Har entry ek index (1 se 7) ke sath hai jo user ko options dikhata hai.
+
+#  USER CHOICE FUNTION
+
+def get_user_choice():
+    print("Choose the sorting option to view IMDb data from SQL table:")
+    for idx, data in file_paths.items():
+        # Extract the filename using os.path.basename
+        file_name = os.path.basename(data['path'])
+        print(f"{idx}. {file_name}")
+    print(f"0. Exit")  # Option to exit
+
+    choice = int(input("\nEnter the number corresponding to your choice: "))
+    return choice
+
+Purpose: Yeh function user se choice lene ke liye hai.
+os.path.basename(data['path']) sirf file ka naam le raha hai taake user ko options dikh sake.
+User se input le raha hai aur choice return kar raha hai. jo b user index enter krta h.
+
+
+# DATA FETCH function
+
+def fetch_data_from_table(table_name):
+    try:
+        # SQL Server connection setup with Windows Authentication
+        connection = pyodbc.connect(
+            'DRIVER={ODBC Driver 17 for SQL Server};'
+            'SERVER=Your_SQL_ServerName_Here;'  # Add your SQL server name
+            'DATABASE=Your_Database_Name_Here;'  # Add your SQL database name
+            'Trusted_Connection=yes;'
+        )
+
+        cursor = connection.cursor()
+        query = f"SELECT * FROM {table_name}"  # SQL query tayar karna
+        cursor.execute(query)  # Query chalana
+
+        rows = cursor.fetchall()  # Sab rows lena
+        if rows:
+            for row in rows:
+                print(row)  # Har row ko print karna
+        else:
+            print(f"No data found in table {table_name}.")  # Agar koi data nahi hai
+
+        cursor.close()  # Cursor ko band karna
+        connection.close()  # Connection ko band karna
+
+    except Exception as e:
+        print(f"Error fetching data from SQL table: {e}")  # Agar koi error aaye toh print karna
+
+
+Purpose: Yeh function SQL table se data fetch karta hai.
+pyodbc.connect(...)            SQL Server se connect karta hai.
+cursor.execute(query):         query chalata hai aur data fetch karta hai.Python mein cursor ka istemal SQL queries ko execute 
+                               karne aur database se data fetch karne ke liye kiya jata hai.
+                               Rows ko print karta hai agar data milta hai, nahi toh message dikhata hai.
+cursor = connection.cursor():  Yeh line ek cursor create karti hai, taaki aap SQL queries ko run kar sakein 
+                               aur data ko access kar sakein.
+
+
+# MAIN function
+
+if __name__ == '__main__':
+    while True:  # User ko exit hone tak loop chalayega
+        choice = get_user_choice()
+
+        if choice == 0:
+            print("Successfully Exit the program...")
+            sys.exit()  # Program exit karna
+        elif choice in file_paths:
+            selected_file = file_paths[choice]  # Selected file ka data lena
+            table_name = selected_file['table']
+            fetch_data_from_table(table_name)  # Data fetch aur display karna
+        else:
+            print("Invalid choice, please try again.")  # Agar choice galat hai toh message
+
+Purpose: Yeh main program ko chalayega.
+Loop chalta rahega jab tak user exit nahi karta.
+User ki choice ke hisaab se SQL table se data fetch karta hai ya program exit karta hai.
+
+
+# SUMMARY
+
+Code ka purpose IMDb data ko SQL Server se fetch karna hai aur user ko options dikhana hai. 
+User ek option choose karta hai aur uske hisaab se data display hota hai. 
+Agar user exit karta hai, toh program band hota hai.

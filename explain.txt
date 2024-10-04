@@ -1,0 +1,224 @@
+# YEH FILE HER FOLDER ME MAJOOD FILES KI EXPLAINATION H BECASUE SUBME ALMOST SAME CODE H 
+
+
+# Header Libraries
+
+time:     Used to add delays (e.g., for waiting a few seconds while the web page loads).
+selenium: A tool to automate browser actions (like opening a webpage, clicking buttons, etc.).
+pyodbc:   A library to connect Python with SQL Server databases.
+json:    Used for formatting data, though it's not used in this code. 
+webdriver_manager.chrome: Automatically manages the ChromeDriver for Selenium so you don't have to install it manually.
+
+
+
+What selenium is?
+
+Selenium is needed in order to carry out web scraping and automate the chrome browser i'll be using.
+Selenium uses the webdriver protocol, therefore the webdriver manager is imported to obtain 
+the ChromeDriver compatible with the version of the browser being used.
+
+
+
+
+
+# User Agent 
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
+}
+
+Headers: They act like an identity card to tell websites that this request
+         is coming from a regular browser (not a bot).
+
+
+# Scraping Function Definition
+
+def scrape_imdb_top_250():
+    url = 'https://www.imdb.com/chart/top/?sort=rank%2Casc'
+
+scrape_imdb_top_250: This function is for scraping IMDb's top 250 movies.
+url: 'webpage_url' = The IMDb page where we will fetch the top 250 movie data.
+
+# Set up Selenium WebDriver
+
+    options = webdriver.ChromeOptions()
+    options.add_argument(f"user-agent={headers['User-Agent']}")
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+
+webdriver.ChromeOptions(): Sets up some options for the browser (in this case, we use a custom user-agent, Yeh jo header file me as a desktop agent add kiya)
+ChromeDriverManager().install(): Downloads and sets up ChromeDriver. if we don't have it 
+webdriver.Chrome(): webdriver.Chrome() ka istemal Chrome browser ko kholne ke liye hota hai taake hum web tasks automate kar saken,
+                    jaise web scraping, testing, ya kisi web page ke elements ke sath interact karna
+                    (button click karna, form bharna, wagaira). Yeh browser ko waise hi control karta hai
+                    jaise ek real user karta hai, is liye JavaScript execution ya dynamic content ko handle karne ke liye zaroori hota hai.
+
+options.add_argument(f"user-agent={headers['User-Agent']}"):
+
+Custom user-agent set karne ke liye, taake browser ko specific device/browser ki tarah behave karaya ja sake.
+service = Service(ChromeDriverManager().install()):
+
+ChromeDriver ko automatically install aur setup karne ke liye.
+driver = webdriver.Chrome(service=service, options=options):
+
+Chrome browser ko options ke sath open karne ke liye (jaise custom user-agent).
+
+# Open the IMDb Top 250 page
+
+    driver.get(url)
+    time.sleep(3)
+
+driver.get(url): Opens the IMDb page in the Chrome browser.
+time.sleep(3): Waits for 3 seconds to ensure the page has loaded completely.
+
+# Finding all the movies:
+ 
+    movies = driver.find_elements(By.CLASS_NAME, 'ipc-metadata-list-summary-item__c')
+
+find_elements: Finds all the movie elements on the page using their class name. 
+               This is where we collect all the movies in the list.
+
+# Scrape details for each movie:
+ 
+    movie_list = []
+    for movie in movies:
+
+movie_list: An empty list to store data for each movie.
+for movie in movies: =  Loop through each movie we found to extract its details.
+
+# Extract Movie Details (Title, Year, Time, IMDb Rating, etc.):
+ 
+        title_column = movie.find_element(By.CLASS_NAME, 'ipc-title__text')
+        title = title_column.text.strip()
+
+Title: Finds the title of each movie using its class and extracts the text.
+
+        year = movie.find_element(By.XPATH, './/span[contains(@class, "sc-b189961a-8")]').text.strip() if movie.find_elements(By.XPATH, './/span[contains(@class, "sc-b189961a-8")]') else None
+        year = int(year) if year else None
+
+Year: Extracts the year of release for the movie if it's available.
+
+        MovieTime = movie.find_element(By.XPATH, './/span[contains(@class, "sc-b189961a-8") and (contains(text(), "h") or contains(text(), "m"))]').text.strip() if movie.find_elements(By.XPATH, './/span[contains(@class, "sc-b189961a-8") and (contains(text(), "h") or contains(text(), "m"))]') else 'N/A'
+Movie Time: Extracts the duration of the movie (like 2h 15m), or returns 'N/A' if not found.
+ 
+        imdb_rating = movie.find_element(By.CLASS_NAME, 'ipc-rating-star--rating').text.strip()
+        imdb_rating = float(imdb_rating) if imdb_rating else None
+IMDb Rating: Extracts the IMDb rating (e.g., 8.5) for each movie.
+ 
+        rating_count = movie.find_element(By.CLASS_NAME, 'ipc-rating-star--voteCount').text.strip() if movie.find_elements(By.CLASS_NAME, 'ipc-rating-star--voteCount') else 'N/A'
+
+Rating Count: Extracts how many people have rated the movie (e.g., "2.9M").
+ 
+        description = movie.find_element(By.CLASS_NAME, 'ipc-html-content-inner-div').text.strip() if movie.find_elements(By.CLASS_NAME, 'ipc-html-content-inner-div') else 'N/A'
+Description: Extracts the short description or summary of the movie.
+ 
+        director = movie.find_element(By.XPATH, './/a[contains(@href, "name")]/span').text.strip() if movie.find_elements(By.XPATH, './/a[contains(@href, "name")]/span') else 'N/A'
+Director: Extracts the director's name.
+ 
+        stars = [star.text.strip() for star in movie.find_elements(By.XPATH, './/a[@class="ipc-link ipc-link--base dli-cast-item"]')]
+Stars: Extracts a list of the main actors starring in the movie.
+ 
+        movie_url = 'https://www.imdb.com/chart/top/?sort=rank%2Casc' + title_column.find_element(By.TAG_NAME, 'a').get_attribute('href') if title_column.find_elements(By.TAG_NAME, 'a') else 'N/A'
+URL: Extracts the URL of the movie's detailed page.
+
+
+
+# Append each movie's data to the list:
+
+        movie_list.append({
+            'Title': title,
+            'Year': year,
+            'Time': MovieTime,
+            'IMDb Rating': imdb_rating,
+            'Rating Count': rating_count,
+            'Description': description,
+            'Director': director,
+            'Stars': ", ".join(stars),
+            'URL': movie_url
+        })
+
+This adds the scraped data for each movie into the movie_list in the form of a dictionary.
+
+#  Quit the browser after scraping:
+ 
+    driver.quit()
+driver.quit(): Closes the browser after we have finished scraping the data.
+
+# Insert Data into SQL Server:
+ 
+def insert_into_database(movies) = This function is responsible for inserting the scraped data into a SQL
+                                   Server database.
+
+    # SQL Server connection setup with Windows Authentication
+    connection = pyodbc.connect(
+        'DRIVER={ODBC Driver 17 for SQL Server};'
+        'SERVER=Your_SQL_ServerName_Here;'  # Add your SQL server name
+        'DATABASE=Your_Database_Name_Here;'  # Add your SQL database name
+        'Trusted_Connection=yes;'
+    )
+pyodbc.connect = Connects to a SQL Server database. You need to provide the correct SERVER and 
+                 DATABASE values.
+
+  cursor = connection.cursor()
+cursor: This is used to execute SQL queries in the database.
+
+cursor.execute('''
+    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='IMDB_Top_250_Movies_By_Rank' AND xtype='U')
+    BEGIN
+        CREATE TABLE IMDB_Top_250_Movies_By_Rank (
+            id INT IDENTITY(1,1) PRIMARY KEY,
+            Title NVARCHAR(255) NOT NULL,
+            Year INT,
+            MovieTime NVARCHAR(10),
+            IMDB_Rating FLOAT,
+            Rating_Count NVARCHAR(20),
+            Description VARCHAR(255),
+            Director VARCHAR(255),
+            Stars VARCHAR(255),
+            URL NVARCHAR(255)
+        )
+    END
+    ''')
+
+This column in the sysobjects table indicates the type of object in the database.
+xtype='U' is used to check if the object in the database is a user-defined table.
+The condition ensures that the script only creates the table if it doesn't already exist.
+
+Create Table: Creates a new table in the database to store the movie data if it doesn't already exist.
+
+for movie in movies:
+        cursor.execute('''
+            INSERT INTO IMDB_Top_250_Movies_By_Rank (Title, Year, MovieTime, IMDB_Rating, Rating_Count, Description, Director, Stars, URL)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', 
+        movie['Title'], 
+        movie['Year'],
+        movie['Time'], 
+        movie['IMDb Rating'], 
+        movie['Rating Count'], 
+        movie['Description'], 
+        movie['Director'], 
+        movie['Stars'], 
+        movie['URL']
+    )
+Insert Data: Inserts each movie's details into the table.
+
+
+
+# Commit and close the connection:
+ 
+    connection.commit()
+    connection.close()
+
+connection.commit(): Saves the changes to the database.
+connection.close(): Closes the database connection.
+
+
+# Main Execution:
+
+if __name__ == '__main__':
+    movies = scrape_imdb_top_250()
+    insert_into_database(movies)
+
+if __name__ == '__main__':: This means that the script will start by scraping
+                            the IMDb top 250 movies and then inserting them into the SQL database.

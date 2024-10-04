@@ -1,0 +1,124 @@
+Yeh File JUST visualizarion.py files ki explanation k liye h 
+Sorting.py ki file Lowrated Folder me h 
+
+
+# HEADER LIBRARIES
+
+pyodbc: Yeh library SQL Server databases se connect karne ke liye istemal hoti hai.
+pandas: Yeh ek powerful data manipulation library hai jo data ko DataFrames mein handle karti hai.
+matplotlib: Yeh plotting library hai jisse hum visualizations create karte hain.
+
+# File Paths aur SQL Tables Ko Define Karna
+
+file_paths = {
+    1: {"path": r"C:\Users\Softtech User\Desktop\IMDB\Project 2\Movies\byAlphabetic.py", "table": "IMDB_Top_250_Movies_By_alphaBetics", "name": "Alphabetic"},
+    ...
+}
+
+Dictionary hai jisme file paths, corresponding SQL table names aur user-friendly names diye gaye hain.
+
+# SQL Server Se Connect Karna
+
+def connect_to_database():
+    return pyodbc.connect(
+        'DRIVER={ODBC Driver 17 for SQL Server};'
+        'SERVER=Name_Here;'  # Aapka server name
+        'DATABASE=Name_Here;'  # Aapka database
+        'Trusted_Connection=yes;'
+    )
+
+Yeh function SQL Server database se connection establish karta hai using Windows Authentication.
+
+#  SQL Table Se Data Load Karna
+
+def load_data_from_sql(table_name, conn):
+    query = f"SELECT Title, IMDB_Rating FROM {table_name} ORDER BY Title"
+    return pd.read_sql(query, conn)
+
+Yeh function ek table name aur connection object leta hai,
+SQL query execute karta hai jo movie titles aur unki IMDb ratings ko retrieve karta hai.
+
+# Bar Chart Plot Karna
+
+def plot_bar_chart(df, title_suffix):
+    first_six = df.head(6)
+    last_six = df.tail(6)
+    movies_to_plot = pd.concat([first_six, last_six])
+
+Yeh function pehle 6 aur aakhri 6 movies ko le kar unhe plot karne ke liye combine karta hai.
+
+# RCOLOR Gradient 
+
+    norm = plt.Normalize(movies_to_plot['IMDB_Rating'].min(), movies_to_plot['IMDB_Rating'].max())
+    cmap = mcolors.LinearSegmentedColormap.from_list("rating_cmap", ['#8acfcc', '#07bab2'])  # Color gradient
+
+Yeh IMDb rating ke hisab se color gradient banata hai.
+
+
+# Bar Chart Create Karna Aur Dikhana
+
+    plt.figure(figsize=(10, 8))
+    bars = plt.barh(movies_to_plot['Title'], movies_to_plot['IMDB_Rating'], color=bar_colors)
+
+    for bar, value in zip(bars, movies_to_plot['IMDB_Rating']):
+        plt.text(value, bar.get_y() + bar.get_height()/2, f'{value:.1f}', va='center', color='black')
+
+    plt.xlabel('IMDb Rating')
+    plt.ylabel('Movie Title')
+    plt.title(f'IMDb Ratings of First and Last 6 Movies from {title_suffix}')
+    plt.gca().invert_yaxis()  # Y-axis ko ulta karna
+    plt.xlim(0, 10)  # X-axis ka limit
+    plt.grid(axis='x', linestyle='--', alpha=0.7)  # Grid lines
+    plt.show()
+
+Yeh bar chart create karta hai aur movie ratings ko plot karta hai. Bar ke upar rating values bhi dikhata hai.
+plt.text:  Yeh function bar ke upar rating value ko display karne ke liye istemal hota hai. 
+    value:                                 Yeh wo rating hai jo display hogi.
+    bar.get_y() + bar.get_height()/2:      Yeh y-coordinate ko set karta hai taake text bar ke center mein ho.
+    f'{value:.1f}':                        Yeh rating value ko ek decimal point ke sath format karta hai (e.g., 7.5).
+    va='center':                           Yeh vertical alignment ko center karta hai taake text bar ke beech mein ho.
+    color='black':                         Yeh text ka color set karta hai.
+
+
+The zip() function is used to combine two or more iterables (like lists or tuples)
+into a single iterable of tuples. Each tuple contains elements from the input iterables at the same position.
+
+
+for bar, value in zip(bars, movies_to_plot['IMDB_Rating']):
+bars: This could be a list of bar objects (e.g., graphical elements representing movies in a plot).
+movies_to_plot['IMDB_Rating']: 
+
+This is likely a list of IMDB ratings for those movies.
+
+
+title_suffix: Yeh variable un file paths ya tables se milta hai jo aapne pehle define kiye the. 
+              Har table ka ek unique name hai (jaise "Alphabetic", "Num Rating", etc.) jo user ko batata hai ke 
+              kaunsa data wo dekh rahe hain.
+
+f'...': Yeh f-string ka istemal karta hai jo Python mein string formatting ka ek tareeqa hai. 
+        Iska matlab hai ke aap string ke andar variables ko directly include kar sakte hain.
+
+
+
+
+
+
+
+
+#  Main Function
+
+def main():
+    conn = connect_to_database()
+
+    while True:
+        print("Select an option to display the graph:")
+        ...
+        choice = input("Enter your choice (0-9): ")
+        
+        if choice == '0':
+            break
+        ...
+    conn.close()
+
+Yeh function database se connect karta hai aur user se options leta hai ke woh kaunsa graph dekhna chahte hain. 
+Phir uske hisaab se data load karke chart plot karta hai.
